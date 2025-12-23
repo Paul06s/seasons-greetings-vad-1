@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vœux</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="player-card">
+        <div class="player-frame">
+          <!-- Le player YouTube sera injecté ici -->
+          <div id="player"></div>
+        </div>
+
+        <button id="toggle" class="toggle" aria-label="Lecture / Pause">▶</button>
+      </div>
+    </div>
+
+    <script>
+      // 1) Charger l'API IFrame YouTube
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+
+      // 2) Extraire l'ID depuis ton lien https://youtu.be/R7LLxPbdpuU
+      const VIDEO_ID = "R7LLxPbdpuU";
+
+      let player;
+      const toggle = document.getElementById("toggle");
+      let isPlaying = false;
+
+      function setIcon() {
+        toggle.textContent = isPlaying ? "❚❚" : "▶";
+      }
+
+      // Appelée automatiquement par l'API YouTube
+      window.onYouTubeIframeAPIReady = function () {
+        player = new YT.Player("player", {
+          videoId: VIDEO_ID,
+          playerVars: {
+            controls: 0,          // pas de barre de contrôle
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1,       // lecture inline sur mobile quand possible
+            fs: 0,                // pas de bouton fullscreen
+            disablekb: 1,         // désactive le clavier
+            iv_load_policy: 3     // masques annotations
+          },
+          events: {
+            onReady: () => setIcon(),
+            onStateChange: (e) => {
+              // 1 = playing, 2 = paused, 0 = ended
+              if (e.data === YT.PlayerState.PLAYING) isPlaying = true;
+              if (e.data === YT.PlayerState.PAUSED) isPlaying = false;
+              if (e.data === YT.PlayerState.ENDED) isPlaying = false;
+              setIcon();
+            }
+          }
+        });
+      };
+
+      function togglePlay() {
+        if (!player) return;
+
+        const state = player.getPlayerState();
+        if (state === YT.PlayerState.PLAYING) {
+          player.pauseVideo();
+          isPlaying = false;
+        } else {
+          player.playVideo(); // sur mobile, YouTube peut exiger un clic utilisateur -> OK car c'est un bouton
+          isPlaying = true;
+        }
+        setIcon();
+      }
+
+      toggle.addEventListener("click", togglePlay);
+      setIcon();
+    </script>
+  </body>
+</html>
